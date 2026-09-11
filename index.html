@@ -367,6 +367,15 @@ body #instructor .instructor-links>.btn:first-child:not(:disabled):not([aria-dis
 
 /* Project SVG wordmark: preserve header alignment and responsive footprint. */
 .header .brand-wordmark{display:block;width:200px;max-width:100%;height:auto;object-fit:contain}
+
+/* Mobile hero width and background coverage correction. */
+.hero{width:100%;box-sizing:border-box;overflow-x:hidden;background-size:cover;background-position:center}
+.hero>div:first-child{width:100%;box-sizing:border-box}
+@media(max-width:768px){
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+.hero{width:100%;max-width:100%;margin-inline:0;box-sizing:border-box;overflow-x:hidden;background-size:cover;background-position:center}
+.hero>div:first-child{width:100%;max-width:100%;box-sizing:border-box}
+}
 </style>
 </head>
 <body id="top">
