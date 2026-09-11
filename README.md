@@ -1,1 +1,0 @@
-# new_AI-Tech-Instructor
