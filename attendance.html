@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>오늘의 출석</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#eef2fa;background:#0c1018;font-size:18px}
+*{box-sizing:border-box}body{margin:0;min-height:100svh;line-height:1.7;background:radial-gradient(ellipse at top,#1b2941 0,transparent 65%),#0c1018}main{width:min(100% - 36px,540px);margin:0 auto;padding:56px 0 40px}.brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:650;letter-spacing:.02em;margin-bottom:32px}.mark{display:grid;place-items:center;width:34px;height:34px;background:#b9ccff;color:#172038;border-radius:10px}.eyebrow{color:#b9ccff;font-weight:650;font-size:16px;margin:0 0 8px}h1{font-size:40px;line-height:1.35;letter-spacing:-.04em;margin:0 0 14px}p{margin:0}.intro{color:#bdc6d8;margin-bottom:28px}form{background:#141c29;border:1px solid #344157;border-radius:26px;padding:28px}label{display:block;font-weight:650;margin:0 0 8px}.optional{font-size:15px;font-weight:400;color:#bdc6d8;margin-left:8px}.field+.field{margin-top:22px}input,textarea,button{font:inherit}input,textarea{width:100%;color:#eef2fa;background:#0e1521;border:1px solid #57677f;border-radius:12px;padding:13px 16px;min-height:56px}textarea{min-height:112px;resize:vertical}input:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid #b9ccff;outline-offset:4px}.hint{font-size:15px;color:#bdc6d8;margin-top:7px}button{border:0;cursor:pointer;min-height:58px;border-radius:12px;font-weight:750;padding:13px 22px;touch-action:manipulation}.primary{width:100%;background:#b9ccff;color:#172038;margin-top:26px}.primary:disabled{cursor:wait;background:#8293b8;color:#111927}input:disabled,textarea:disabled{opacity:.7}.status{margin-top:16px;font-size:16px;overflow-wrap:anywhere}.status:empty{display:none}.status.error{color:#ffb7b7}.footer{font-size:15px;text-align:center;color:#bdc6d8;margin-top:24px}dialog{color:#eef2fa;background:#172131;border:1px solid #57677f;border-radius:26px;width:min(100% - 36px,420px);padding:32px;text-align:center}dialog::backdrop{background:rgb(0 0 0 / .7)}.success-icon{margin:0 auto 18px;display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:#b9ccff;color:#172038;font-size:34px}h2{margin:0 0 12px;font-size:28px;letter-spacing:-.03em}.modal-copy{color:#bdc6d8}dialog .primary{margin-top:24px}noscript{display:block;padding:20px;color:#ffb7b7}@media(max-width:420px){main{padding-top:30px}form{padding:22px}h1{font-size:34px}}
+</style>
+<style>
+.attendance-list{margin-top:24px}.list-button{width:100%;background:#172131;color:#eef2fa;border:1px solid #57677f}.list-button:disabled{cursor:wait;color:#bdc6d8}.list-panel{margin-top:18px;padding:22px;background:#141c29;border:1px solid #344157;border-radius:22px}.list-panel h2{font-size:24px}.table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:16px;margin-top:16px;text-align:left}caption{text-align:left;color:#bdc6d8;font-size:15px;margin-bottom:8px}th,td{padding:14px 8px;border-bottom:1px solid #344157;vertical-align:top}th{color:#b9ccff;font-weight:650;white-space:nowrap}td{overflow-wrap:anywhere}td:first-child{white-space:nowrap;font-variant-numeric:tabular-nums}.list-summary{color:#bdc6d8;font-size:15px}.list-panel .status{margin-top:12px}.list-panel[hidden]{display:none}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand"><span class="mark" aria-hidden="true">✓</span>함께하는 오늘</div>
+  <header><p class="eyebrow">반가워요</p><h1>오늘도 함께해요.</h1><p class="intro">이름과 휴대폰 뒷자리를 남겨 주세요.<br>출석 시간은 자동으로 기록돼요.</p></header>
+  <form id="attendance-form">
+    <div class="field"><label for="name">이름</label><input id="name" name="name" type="text" autocomplete="name" maxlength="80" required></div>
+    <div class="field"><label for="phone">휴대폰뒷자리</label><input id="phone" name="phone" type="text" inputmode="numeric" autocomplete="off" minlength="4" maxlength="4" pattern="[0-9]{4}" aria-describedby="phone-hint" title="숫자 4자리를 입력해 주세요." required><p id="phone-hint" class="hint">휴대폰 번호의 마지막 숫자 4자리만 입력해 주세요.</p></div>
+    <div class="field"><label for="note">비고<span class="optional">선택</span></label><textarea id="note" name="note" rows="3" maxlength="500"></textarea></div>
+    <button id="submit-button" class="primary" type="submit">출석체크</button>
+    <p id="status" class="status" role="status" aria-live="polite" aria-atomic="true"></p>
+  </form>
+  <section class="attendance-list" aria-label="오늘의 출석 현황">
+    <button type="button" id="view-attendance" class="list-button" aria-controls="attendance-panel" aria-expanded="false">오늘의 출석 현황 보기</button>
+    <div id="attendance-panel" class="list-panel" hidden>
+      <h2>오늘 함께한 분들</h2>
+      <p id="list-summary" class="list-summary"></p>
+      <p id="list-status" class="status" role="status" aria-live="polite"></p>
+      <div class="table-scroll"><table id="attendance-table" hidden>
+        <caption>한국 시간 기준, 최근 출석부터 표시합니다.</caption>
+        <thead><tr><th scope="col">시간</th><th scope="col">이름</th><th scope="col">휴대폰<br>뒷자리</th><th scope="col">비고</th></tr></thead>
+        <tbody id="attendance-rows"></tbody>
+      </table></div>
+    </div>
+  </section>
+  <p class="footer">입력한 정보는 출석부에 저장됩니다.</p>
+  <noscript>출석체크를 하려면 브라우저에서 자바스크립트를 허용해 주세요.</noscript>
+</main>
+<dialog id="success-dialog" aria-labelledby="success-title" aria-describedby="success-description">
+  <div class="success-icon" aria-hidden="true">✓</div>
+  <h2 id="success-title">출석체크 완료!</h2>
+  <p id="success-description" class="modal-copy">출석 정보를 전송했어요.<br>함께해 주셔서 감사합니다.</p>
+  <button id="close-dialog" class="primary" type="button" autofocus>확인</button>
+</dialog>
+<script>
+'use strict';
+const WEB_APP_URL='https://script.google.com/macros/s/AKfycbzcJ8-rFpSC2fJ7OMaf2z_d3f9GQMvDXnETtxkwpn-2IQn5KuOPDsx4hSSF7kNvTerqpg/exec';
+const form=document.getElementById('attendance-form');
+const nameInput=document.getElementById('name');
+const phoneInput=document.getElementById('phone');
+const noteInput=document.getElementById('note');
+const submitButton=document.getElementById('submit-button');
+const statusText=document.getElementById('status');
+const successDialog=document.getElementById('success-dialog');
+let sending=false;
+function setStatus(message,error=false){statusText.textContent=message;statusText.classList.toggle('error',error);}
+function setLoading(value){
+  sending=value;
+  [nameInput,phoneInput,noteInput,submitButton].forEach(control=>control.disabled=value);
+  submitButton.textContent=value?'전송 중...':'출석체크';
+  form.setAttribute('aria-busy',String(value));
+}
+form.addEventListener('submit',async event=>{
+  event.preventDefault();
+  if(sending)return;
+  const data={name:nameInput.value.trim(),phone:phoneInput.value.trim(),note:noteInput.value.trim()};
+  if(!data.name){setStatus('이름을 입력해 주세요.',true);nameInput.focus();return;}
+  if(!/^[0-9]{4}$/.test(data.phone)){setStatus('휴대폰 뒷자리 숫자 4자리를 입력해 주세요.',true);phoneInput.focus();return;}
+  if(!form.reportValidity())return;
+  if(navigator.onLine===false){setStatus('인터넷 연결을 확인한 뒤 다시 눌러 주세요.',true);return;}
+  setLoading(true);setStatus('출석 정보를 보내고 있어요. 잠시만 기다려 주세요.');
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),30000);
+  let uncertain=false;
+  try{
+    // no-cors 응답은 읽을 수 없으므로 HTTP 상태와 본문을 검사하지 않습니다.
+    // 요청 완료를 표시하는 방식이며, 서버의 실제 저장 성공을 보증하지 않습니다.
+    await fetch(WEB_APP_URL,{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(data),
+      signal:controller.signal
+    });
+  }catch(error){
+    // 요청한 UI 정책: 네트워크 예외에도 완료 화면을 표시합니다.
+    // 이 예외가 저장 성공을 뜻하지는 않으므로 확인 불가 안내를 함께 표시합니다.
+    uncertain=true;
+  }finally{
+    clearTimeout(timeout);setLoading(false);
+  }
+    form.reset();
+    const message=uncertain
+      ?'저장 여부를 확인할 수 없어요. 재전송 전에 담당자에게 출석부를 확인해 주세요.'
+      :'출석 요청을 보냈어요. 실제 저장 여부는 담당자가 출석부에서 확인할 수 있어요.';
+    setStatus(message);
+    document.getElementById('success-description').textContent=message;
+    // 모달 표시 실패를 전송 실패로 잘못 안내하지 않습니다.
+    try{
+      if(typeof successDialog.showModal==='function')successDialog.showModal();
+      else window.alert('출석체크 완료!\n'+message);
+    }catch(error){
+      setStatus('출석체크 완료! '+message);
+    }
+});
+document.getElementById('close-dialog').addEventListener('click',()=>successDialog.close());
+successDialog.addEventListener('close',()=>nameInput.focus());
+
+const listButton=document.getElementById('view-attendance');
+const listPanel=document.getElementById('attendance-panel');
+const listStatus=document.getElementById('list-status');
+const listSummary=document.getElementById('list-summary');
+const listTable=document.getElementById('attendance-table');
+const listRows=document.getElementById('attendance-rows');
+function koreaDateKey(date=new Date()){
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
+  const get=type=>parts.find(part=>part.type===type).value;
+  return get('year')+'-'+get('month')+'-'+get('day');
+}
+function todayRecords(records,today){
+  return records.map((record,index)=>({record,index}))
+    .filter(({record})=>record&&typeof record.datetime==='string'&&/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(record.datetime)&&record.datetime.slice(0,10)===today)
+    .sort((a,b)=>b.record.datetime.localeCompare(a.record.datetime)||b.index-a.index)
+    .map(({record})=>record);
+}
+listButton.addEventListener('click',async()=>{
+  if(listButton.disabled)return;
+  listButton.disabled=true;listButton.textContent='불러오는 중...';listButton.setAttribute('aria-expanded','true');
+  listPanel.hidden=false;listPanel.setAttribute('aria-busy','true');listTable.hidden=true;listRows.replaceChildren();listSummary.textContent='';
+  listStatus.classList.remove('error');listStatus.textContent='오늘의 출석 기록을 확인하고 있어요.';
+  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),20000);
+  try{
+    // 목록을 표시하려면 읽을 수 있는 JSON 응답이 필요합니다. no-cors는 사용하지 않습니다.
+    const response=await fetch(WEB_APP_URL+'?action=list&t='+Date.now(),{method:'GET',mode:'cors',redirect:'follow',signal:controller.signal});
+    if(!response.ok)throw new Error('출석부 서버가 정상 응답하지 않았어요.');
+    const data=await response.json();
+    if(!data||data.ok!==true||!Array.isArray(data.records))throw new Error(data&&typeof data.error==='string'?data.error:'출석 목록 응답 형식을 확인해 주세요.');
+    const today=koreaDateKey(),records=todayRecords(data.records,today);
+    listSummary.textContent=today+' · 출석 '+records.length+'건';
+    for(const record of records){
+      const row=document.createElement('tr');
+      for(const value of [record.datetime.slice(11),record.name,record.phone,record.note]){
+        const cell=document.createElement('td');cell.textContent=value==null||value===''?'없음':String(value);row.appendChild(cell);
+      }
+      listRows.appendChild(row);
+    }
+    listTable.hidden=records.length===0;
+    listStatus.textContent=records.length?'최신 기록부터 표시했어요. 버튼을 다시 누르면 갱신해요.':'오늘 등록된 출석 기록이 아직 없어요.';
+  }catch(error){
+    listStatus.classList.add('error');
+    listStatus.textContent=error.name==='AbortError'?'목록 조회 시간이 초과됐어요. 잠시 후 다시 눌러 주세요.':error instanceof TypeError?'목록을 읽지 못했어요. 인터넷 연결과 웹 앱 공개 권한을 확인해 주세요. 브라우저가 응답을 차단하면 Apps Script 쪽 조회 방식도 변경해야 해요.':error.message;
+  }finally{
+    clearTimeout(timer);listButton.disabled=false;listButton.textContent='오늘의 출석 현황 보기';listPanel.setAttribute('aria-busy','false');
+  }
+});
+</script>
+</body>
+</html>
